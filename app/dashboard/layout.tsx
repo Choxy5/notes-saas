@@ -1,5 +1,6 @@
 import { DashboardNav } from '@/app/components/DashboardNav';
 import prisma from '@/app/lib/db';
+import { stripe } from '@/app/lib/stripe';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
 import { redirect } from 'next/navigation';
 
@@ -35,6 +36,21 @@ async function getData({
         id: id,
         email: email,
         name: name,
+      },
+    });
+  }
+
+  if (!user?.stripeCustomerId) {
+    const data = await stripe.customers.create({
+      email: email,
+    });
+
+    await prisma.user.update({
+      where: {
+        id: id,
+      },
+      data: {
+        stripeCustomerId: data.id,
       },
     });
   }
